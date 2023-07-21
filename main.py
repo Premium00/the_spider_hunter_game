@@ -1,12 +1,10 @@
 import copy
-from config import spawn_player, level_steps, mark_player, mark_enemy, spawn_enemy
-from graphics import game_start_art, game_end_art
+import random
+from config import spawn_player, level_steps, mark_player, mark_enemy, spawn_enemy, mark_win_area
+from graphics import game_start_art, game_dead_art, game_win_art 
 
 is_game_on = True
-
-class ShootBehavior:
-    def shoot(self, directory):
-        pass
+win_state = False
 
 class CatchBehavior:
     def is_catch(self, character):
@@ -35,11 +33,10 @@ class PhysicalObject:
     def __init__(self, name, location):
         self.name = name
         self.location = location
-    
-    @property
-    def get_location():
-        pass
 
+class Bullet(PhysicalObject):
+    def __init__(self, name, location, direction):
+        super().__init__(name, location)
 
 class Character(PhysicalObject):
     def __init__(self, name, location, hp):
@@ -103,6 +100,7 @@ class Map:
         self.map_state = copy.deepcopy(self.full_map)
         self.map_state[character.location[1]][character.location[0]] = mark_player
         self.map_state[enemy.location[1]][enemy.location[0]] = mark_enemy
+        self.map_state[self.win_area[1]][self.win_area[0]] = mark_win_area
 
 
         for map_row in self.map_state:
@@ -111,40 +109,46 @@ class Map:
                 row_to_print += map_field
             print(row_to_print)
 
-    
+
+    def create_win_area(self):
+        win_area_x = random.randint(1,len(self.full_map)-1)
+        win_area_y = random.randint(1,len(self.full_map[0])-1)
+        self.win_area =  [win_area_x, win_area_y]
 
 
-
-
+    def is_player_win(self, character):
+        if self.win_area[0] == character.location[0] and self.win_area[1] == character.location[1]:
+            return True
+        else:
+            return False
+        
+        
 print(game_start_art)
 print("")
 print("Witaj w grze, stwórz swojego bohatera")
 name = input("Podaj imię bohatera: ")
 player_01 = Player(name=name, location=spawn_player, hp=50)
 map_01 = Map()
+map_01.create_win_area()
 spider_01 = Enemy(name="Spider", location=spawn_enemy, hp=10)
 map_01.display_map(player_01, spider_01)
 print(player_01.get_introduce())
 
-
-while is_game_on == True:
-
-   # player_input = input("1 aby iść, 2 aby strzelać: ")
-   # if player_input == "1":
+while is_game_on == True and win_state == False:
     player_input = input("Podaj kierunek ruchu: ")
     player_01.move(player_input)
-    # elif player_input == "2":
-        #player_input = input("Podaj kierunek strzału: ")
-        #player_01.shoot(player_input)
-
-    
     spider_01.move_follow(player_01)
     is_game_on = spider_01.is_catch(player_01)
+    win_state = map_01.is_player_win(player_01)
     print(player_01.get_introduce())
     map_01.display_map(player_01, spider_01)
-    print(f"P{player_01.location} E{spider_01.location}")
-print(game_end_art)
-print(f"P{player_01.location} E{spider_01.location}")
+    print(f"P{player_01.location} E{spider_01.location} win{map_01.win_area}")
+if win_state:
+    print(game_win_art)
+else:
+    print(game_dead_art)
+
+print(f"P{player_01.location} E{spider_01.location} win{map_01.win_area}")
 
 
 

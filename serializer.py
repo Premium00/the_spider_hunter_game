@@ -26,9 +26,9 @@ class JsonMixin(Serializer):
     def file_type(cls):
         return "json"
 
-
 class ElementSaveManagerMixin(JsonMixin):
     def save_element(self):
+        #TODO the way of specifying the path is weak, i will change it
         folder_path = f"/home/stalkowski/projekty/projekty-git/OOP_spider_hunter/the_spider_hunter_game/elements/{self.__class__.__name__.lower()}"
         file_name = f"{self.name}.{self.file_type()}"
         file_path = os.path.join(folder_path, file_name)

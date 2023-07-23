@@ -44,15 +44,19 @@ class Character(PhysicalObject):
         self.hp = hp
 
     
-    def move(self, direction):
+    def move(self, direction, map):
         if direction=="s":
-            self.location[1] += 1
+            if not self.location[1] >= len(map.full_map)-1: 
+                self.location[1] += 1
         elif direction=="w":
-            self.location[1] -= 1
+            if not self.location[1] <= 0: 
+                self.location[1] -= 1
         elif direction=="a":
-            self.location[0] -= 1
+            if not self.location[0] <= 0: 
+                self.location[0] -= 1
         elif direction=="d":
-            self.location[0] += 1
+            if not self.location[0] >= len(map.full_map[0])-1: 
+                self.location[0] += 1
 
 
 class Player(Character):
@@ -136,7 +140,7 @@ print(player_01.get_introduce())
 
 while is_game_on == True and win_state == False:
     player_input = input("Podaj kierunek ruchu: ")
-    player_01.move(player_input)
+    player_01.move(player_input, map_01)
     spider_01.move_follow(player_01)
     is_game_on = spider_01.is_catch(player_01)
     win_state = map_01.is_player_win(player_01)

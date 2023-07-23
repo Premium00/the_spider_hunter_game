@@ -92,8 +92,7 @@ class Player(Character, ElementSaveManagerMixin):
 {self.name} {self.get_level}lv | {self.exp}/{self.get_when_text_level}exp
 {self.hp}hp
         """
-
-
+    
 
 class Enemy(Character, MoveFollowBehavior, CatchBehavior):
     def __init__(self, name, location, hp):
@@ -110,26 +109,21 @@ class Map:
             full_map.append(y_field)
         self.full_map = full_map
         
-        
     def display_map(self, character, enemy):
         self.map_state = copy.deepcopy(self.full_map)
         self.map_state[character.location[1]][character.location[0]] = mark_player
         self.map_state[enemy.location[1]][enemy.location[0]] = mark_enemy
         self.map_state[self.win_area[1]][self.win_area[0]] = mark_win_area
-
-
         for map_row in self.map_state:
             row_to_print = ""
             for map_field in map_row:
                 row_to_print += map_field
             print(row_to_print)
 
-
     def create_win_area(self):
         win_area_x = random.randint(1,len(self.full_map)-1)
         win_area_y = random.randint(1,len(self.full_map[0])-1)
         self.win_area =  [win_area_x, win_area_y]
-
 
     def is_player_win(self, character):
         if self.win_area[0] == character.location[0] and self.win_area[1] == character.location[1]:
@@ -137,10 +131,9 @@ class Map:
         else:
             return False
         
-        
 
 
-
+#TODO in the future, create a "Game" class to handle the gameplay and interface
 print(game_start_art)
 print("")
 print("Lista top graczy:")

@@ -2,7 +2,7 @@ import copy
 import random
 from config import spawn_player, level_steps, mark_player, mark_enemy, spawn_enemy, mark_win_area
 from graphics import game_start_art, game_dead_art, game_win_art 
-
+from serializer import ElementSaveManagerMixin
 is_game_on = True
 win_state = False
 
@@ -34,9 +34,8 @@ class PhysicalObject:
         self.name = name
         self.location = location
 
-class Bullet(PhysicalObject):
-    def __init__(self, name, location, direction):
-        super().__init__(name, location)
+    def get_introduce(self):
+        pass
 
 class Character(PhysicalObject):
     def __init__(self, name, location, hp):
@@ -44,21 +43,30 @@ class Character(PhysicalObject):
         self.hp = hp
 
     
-    def move(self, direction):
+    def move(self, direction, map):
         if direction=="s":
-            self.location[1] += 1
+            if not self.location[1] >= len(map.full_map)-1: 
+                self.location[1] += 1
         elif direction=="w":
-            self.location[1] -= 1
+            if not self.location[1] <= 0: 
+                self.location[1] -= 1
         elif direction=="a":
-            self.location[0] -= 1
+            if not self.location[0] <= 0: 
+                self.location[0] -= 1
         elif direction=="d":
-            self.location[0] += 1
+            if not self.location[0] >= len(map.full_map[0])-1: 
+                self.location[0] += 1
 
 
-class Player(Character):
-    def __init__(self, name, location, hp=100, exp=0):
+class Player(Character, ElementSaveManagerMixin):
+    def __init__(self, name, location, hp=100, exp=0, moves=0, is_winner=False, level=1, **kwargs):
         super().__init__(name, location, hp)
         self.exp = exp
+        self.moves = moves
+        self.is_winner = is_winner
+        self.level = level
+        for key, value in kwargs.items():
+            setattr(self, key, value)
     
     @property
     def get_level(self):
@@ -73,11 +81,18 @@ class Player(Character):
     def get_when_text_level(self):
         return level_steps[(self.get_level - 1)]
     
+    def count_moves(self):
+        self.moves += 1
+    
+    def set_winner(self):
+        self.is_winner = True
+    
     def get_introduce(self):
         return f"""
 {self.name} {self.get_level}lv | {self.exp}/{self.get_when_text_level}exp
 {self.hp}hp
-        """    
+        """
+
 
 
 class Enemy(Character, MoveFollowBehavior, CatchBehavior):
@@ -123,10 +138,21 @@ class Map:
             return False
         
         
+
+
+
 print(game_start_art)
+print("")
+print("Lista top graczy:")
+for row in Player.get_loaded_elements_atr("name", "moves"):
+    print(row)
 print("")
 print("Witaj w grze, stwórz swojego bohatera")
 name = input("Podaj imię bohatera: ")
+is_name_exist = Player.check_if_element_exist(name)
+while is_name_exist:
+    name = input(f"Gracz o nazwie {name} już istnieje. Podaj inne imię bohatera: ")
+    is_name_exist = Player.check_if_element_exist(name)
 player_01 = Player(name=name, location=spawn_player, hp=50)
 map_01 = Map()
 map_01.create_win_area()
@@ -136,7 +162,8 @@ print(player_01.get_introduce())
 
 while is_game_on == True and win_state == False:
     player_input = input("Podaj kierunek ruchu: ")
-    player_01.move(player_input)
+    player_01.move(player_input, map_01)
+    player_01.count_moves()
     spider_01.move_follow(player_01)
     is_game_on = spider_01.is_catch(player_01)
     win_state = map_01.is_player_win(player_01)
@@ -144,11 +171,14 @@ while is_game_on == True and win_state == False:
     map_01.display_map(player_01, spider_01)
     print(f"P{player_01.location} E{spider_01.location} win{map_01.win_area}")
 if win_state:
+    player_01.set_winner()
+    player_01.save_element()
     print(game_win_art)
 else:
     print(game_dead_art)
 
-print(f"P{player_01.location} E{spider_01.location} win{map_01.win_area}")
+print(f"Gratulacje {player_01.name}, udało ci się ukończyć grę w {player_01.moves} ruchach!")
+#print(f"P{player_01.location} M{player_01.moves} E{spider_01.location} win{map_01.win_area}")
 
 
 
